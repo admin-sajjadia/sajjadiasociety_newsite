@@ -22,8 +22,8 @@ const usd = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const ein = settings?.ein;
-const mosqueUrl = campaign?.donorboxLink ?? "https://donorbox.org/build-the-new-sajjadia-mosque";
-const generalUrl = giving?.generalDonorboxUrl ?? "https://donorbox.org/sajjadia-islamic-society-donations";
+const mosqueUrl = campaign?.donationUrl;
+const generalUrl = giving?.generalDonationUrl;
 
 const khums = {
   orgName: giving?.khumsOrgName ?? "Sajjadia Islamic Society",
@@ -108,7 +108,7 @@ const GIVE_BTN =
           <a href={mosqueUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
             Give to the mosque
             <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens Donorbox in a new tab)</span>
+            <span class="sr-only">(opens in a new tab)</span>
           </a>
         </div>
       </article>
@@ -127,7 +127,7 @@ const GIVE_BTN =
           <a href={generalUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
             Donate
             <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens Donorbox in a new tab)</span>
+            <span class="sr-only">(opens in a new tab)</span>
           </a>
         </div>
       </article>
@@ -165,8 +165,7 @@ const GIVE_BTN =
     </div>
 
     <p class="mt-6 text-sm text-muted-foreground">
-      Sajjadia Islamic Society is a registered 501(c)(3) nonprofit{ein ? `, EIN ${ein}` : ""}. Donations made through
-      Donorbox are tax-deductible as allowed by law.
+      Sajjadia Islamic Society is a registered 501(c)(3) nonprofit{ein ? `, EIN ${ein}` : ""}. Donations to the Mosque and General funds are tax-deductible as allowed by law.
     </p>
   </div>
 </Wrapper>

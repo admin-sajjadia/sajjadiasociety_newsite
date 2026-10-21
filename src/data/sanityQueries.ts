@@ -48,7 +48,7 @@ export async function getCampaign() {
       goalAmount,
       raisedAmount,
       lastUpdated,
-      donorboxLink,
+      donationUrl,
       story,
       milestones,
       callToAction,
@@ -104,7 +104,7 @@ export async function getAlbums(categories: string[]) {
 export async function getGivingOptions() {
   return sanityClient.fetch(`
     *[_type == "givingOptions"][0]{
-      mosqueDescription, generalTitle, generalDescription, generalDonorboxUrl,
+      mosqueDescription, generalTitle, generalDescription, generalDonationUrl,
       khumsDescription, khumsOrgName, khumsValidThrough, khumsUrl,
       khumsGuideImage,
       "ijazaUrl": ijazaPdf.asset->url

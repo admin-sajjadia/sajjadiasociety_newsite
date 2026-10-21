@@ -19,7 +19,7 @@ const title = campaign?.title ?? "Sajjadia Mosque";
 const tagline = campaign?.tagline;
 const raised = campaign?.raisedAmount ?? 0;
 const goal = campaign?.goalAmount ?? 0;
-const donateUrl = campaign?.donorboxLink ?? "https://donorbox.org/build-the-new-sajjadia-mosque";
+const donateUrl = campaign?.donationUrl;
 const milestones = campaign?.milestones ?? [];
 
 // Sanity "date" fields are plain dates (2026-10-07). Format those in UTC so
@@ -96,7 +96,7 @@ const GIVE_BTN =
           <a href={donateUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
             Support the build
             <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens Donorbox in a new tab)</span>
+            <span class="sr-only">(opens in a new tab)</span>
           </a>
           {lastUpdated && (
             <p class="text-sm text-sidebar-foreground/75">Totals updated {lastUpdated}</p>
