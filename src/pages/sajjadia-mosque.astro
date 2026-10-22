@@ -8,7 +8,6 @@ import { getAlbums, getCampaign } from "@/data/sanityQueries";
 import { urlFor } from "@/lib/sanity";
 import { portableTextToHtml } from "@/lib/portableText";
 import type { Album } from "@/lib/albums";
-import { ArrowUpRight } from "lucide-react";
 
 const [campaign, albums] = await Promise.all([
   getCampaign(),
@@ -19,7 +18,6 @@ const title = campaign?.title ?? "Sajjadia Mosque";
 const tagline = campaign?.tagline;
 const raised = campaign?.raisedAmount ?? 0;
 const goal = campaign?.goalAmount ?? 0;
-const donateUrl = campaign?.donationUrl;
 const milestones = campaign?.milestones ?? [];
 
 // Sanity "date" fields are plain dates (2026-10-07). Format those in UTC so
@@ -93,11 +91,7 @@ const GIVE_BTN =
         {goal > 0 && <CampaignProgress raised={raised} goal={goal} tone="dark" />}
 
         <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <a href={donateUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
-            Support the build
-            <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens in a new tab)</span>
-          </a>
+          <a href="/donate#mosque" class={GIVE_BTN}>Support the Mosque</a>
           {lastUpdated && (
             <p class="text-sm text-sidebar-foreground/75">Totals updated {lastUpdated}</p>
           )}

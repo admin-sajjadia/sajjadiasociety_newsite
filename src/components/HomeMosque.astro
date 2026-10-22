@@ -1,5 +1,7 @@
 ---
-// Home page section that points people to the Sajjadia Mosque page.
+// Home page section for the Sajjadia Mosque project: progress, a concept
+// rendering, and buttons to give or to see the full plans.
+// Light background so it stands apart from the navy footer below it.
 // Hidden when "Campaign Active?" is switched off in Sanity.
 // Shows the first photo of the newest "Concept renderings" album, labeled as
 // a rendering. Without a rendering, the progress bar takes the right column.
@@ -28,35 +30,42 @@ const rendering = renderingPhoto
     }
   : null;
 
-const BUTTON =
-  "mt-8 inline-flex min-h-12 items-center rounded-lg bg-sidebar-foreground px-6 font-semibold text-sidebar " +
-  "transition-colors hover:bg-sidebar-foreground/90 focus-visible:outline-none focus-visible:ring-2 " +
-  "focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar";
+// Gold: a giving button. It opens the Mosque tab on Support Us, where people choose an amount.
+const GIVE_BTN =
+  "inline-flex min-h-12 items-center justify-center rounded-lg bg-give px-6 font-semibold text-give-foreground " +
+  "transition-colors hover:bg-give/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+  "focus-visible:ring-offset-2";
+const PLANS_BTN =
+  "inline-flex min-h-12 items-center justify-center rounded-lg border border-primary px-6 font-semibold text-primary " +
+  "transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 " +
+  "focus-visible:ring-ring focus-visible:ring-offset-2";
 ---
 
 {show && (
   <section
-    class="layout-full bg-sidebar py-14 text-sidebar-foreground md:py-16"
+    class="layout-full border-t border-border bg-card py-14 text-foreground md:py-16"
     aria-labelledby="home-mosque-title"
   >
     <div class="layout-base">
       <div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
-          <h2 id="home-mosque-title" class="text-3xl md:text-4xl">
+          <h2 id="home-mosque-title" class="text-3xl text-foreground md:text-4xl">
             {campaign.title ?? "Sajjadia Mosque"}
           </h2>
           {campaign.tagline && (
-            <p class="mt-3 max-w-xl text-lg text-sidebar-foreground/75">{campaign.tagline}</p>
+            <p class="mt-3 max-w-xl text-lg text-muted-foreground">{campaign.tagline}</p>
           )}
 
           {rendering && goal > 0 && (
             <div class="mt-8 max-w-xl">
-              <CampaignProgress raised={raised} goal={goal} tone="dark" />
+              <CampaignProgress raised={raised} goal={goal} tone="light" />
             </div>
           )}
 
-          <!-- Not gold: gold is reserved for the giving cards and the Mosque page button -->
-          <a href="/sajjadia-mosque" class={BUTTON}>See the plans and progress</a>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/donate#mosque" class={GIVE_BTN}>Support the Mosque</a>
+            <a href="/sajjadia-mosque" class={PLANS_BTN}>See the plans and progress</a>
+          </div>
         </div>
 
         <!-- The alt text already says "Concept rendering", so the visible label is hidden from screen readers -->
@@ -71,7 +80,7 @@ const BUTTON =
               height="600"
               loading="lazy"
               decoding="async"
-              class="aspect-[4/3] w-full bg-sidebar-foreground/10 bg-cover bg-center object-cover"
+              class="aspect-[4/3] w-full bg-muted bg-cover bg-center object-cover"
               style={rendering.lqip ? `background-image: url(${rendering.lqip})` : undefined}
             />
             <span
@@ -82,7 +91,7 @@ const BUTTON =
             </span>
           </div>
         ) : (
-          goal > 0 && <CampaignProgress raised={raised} goal={goal} tone="dark" />
+          goal > 0 && <CampaignProgress raised={raised} goal={goal} tone="light" />
         )}
       </div>
     </div>
