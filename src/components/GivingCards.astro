@@ -1,17 +1,24 @@
 ---
-import KhumsGuide from "@/components/KhumsGuide";
+// Ways to give, as one tabbed card: Sajjadia Mosque, General Donation, Khums.
+//
+// - Mosque and General: preset or custom amount, then "Continue to donate"
+//   opens the campaign's donation page in a new tab with ?amount=<amount>.
+// - Khums: amount and portion are sent straight to I.M.A.M.'s Khums form
+//   (allocated to Sajjadia), which opens their cart in a new tab.
+// - All three panels share one space sized to the tallest, so the card keeps
+//   the same height whichever tab is open.
+// - /donate#general or /donate#khums opens that tab directly.
 import { getCampaign, getGivingOptions, getSiteSettings } from "@/data/sanityQueries";
-import { urlFor } from "@/lib/sanity";
-import { ArrowUpRight, FileText, HandCoins, HandHeart } from "lucide-react";
+import { ArrowUpRight, CircleCheck, FileText } from "lucide-react";
 
 interface Props {
-  /** true = full homepage band with heading; false = just the cards, for the Support Us page */
+  /** Kept so existing usages still work; the card no longer has its own heading */
   heading?: boolean;
-  /** false hides the Mosque card's progress bar (the home page shows progress in its Mosque section) */
+  /** false hides the Mosque tab's progress bar */
   showProgress?: boolean;
 }
 
-const { heading = true, showProgress = true } = Astro.props;
+const { showProgress = true } = Astro.props;
 
 const [campaign, giving, settings] = await Promise.all([getCampaign(), getGivingOptions(), getSiteSettings()]);
 
@@ -22,65 +29,97 @@ const usd = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const ein = settings?.ein;
-const mosqueUrl = campaign?.donationUrl;
-const generalUrl = giving?.generalDonationUrl;
+const mosqueUrl: string | undefined = campaign?.donationUrl;
+const generalUrl: string | undefined = giving?.generalDonationUrl;
+const generalTitle: string = giving?.generalTitle ?? "General Donation";
 
 const khums = {
   orgName: giving?.khumsOrgName ?? "Sajjadia Islamic Society",
   validThrough: giving?.khumsValidThrough ?? "July 2027",
-  khumsUrl: giving?.khumsUrl ?? "https://imam-us.org/products/khums-one-time",
-  guideImageUrl: giving?.khumsGuideImage?.asset ? urlFor(giving.khumsGuideImage).width(1200).auto("format").url() : undefined,
-  guideImageAlt: giving?.khumsGuideImage?.alt,
-  ijazaUrl: giving?.ijazaUrl,
+  formUrl: giving?.khumsUrl ?? "https://imam-us.org/products/khums-one-time",
+  ijazaUrl: giving?.ijazaUrl as string | undefined,
 };
 
-const Wrapper = heading ? "section" : "div";
+// I.M.A.M.'s Khums form (a WooCommerce store). These names and values must
+// match their form exactly; if I.M.A.M. changes their site, update them here.
+const IMAM = {
+  productId: "1044",
+  minimum: 5,
+  portions: [
+    { value: "Khums - Both", label: "Both portions (Imam and Sadat)" },
+    { value: "Khums - Imam", label: "Imam portion only" },
+    { value: "Khums - Sada", label: "Sadat portion only" },
+  ],
+};
 
-const CARD = "flex flex-col rounded-2xl border border-border bg-card p-6 md:p-7";
-const ICON_TILE = "flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-foreground";
-const TITLE = "mt-5 font-serif text-[1.7rem] leading-tight text-foreground";
-const BODY = "mt-2 text-[17px] text-muted-foreground";
-const RECEIPT = "text-sm text-muted-foreground";
+const PRESETS = [50, 100, 250, 500];
+
+const TABS = [
+  { key: "mosque", label: "Sajjadia Mosque" },
+  { key: "general", label: generalTitle },
+  { key: "khums", label: "Khums" },
+];
+
+const TAB =
+  "flex min-h-14 items-center justify-center rounded-xl px-2 py-2 text-center text-sm font-semibold leading-tight " +
+  "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-base " +
+  "aria-selected:bg-primary aria-selected:text-primary-foreground aria-[selected=false]:text-foreground " +
+  "aria-[selected=false]:hover:bg-card";
+const PANEL = "col-start-1 row-start-1 flex flex-col focus-visible:outline-none";
+const BODY = "text-[17px] text-muted-foreground";
+const LABEL = "text-sm font-semibold text-foreground";
+const INPUT =
+  "w-full rounded-lg border border-input bg-background px-3 py-3 text-base text-foreground " +
+  "placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent";
+const PRESET =
+  "min-h-11 rounded-lg border border-border bg-muted text-base font-semibold text-foreground transition-colors " +
+  "hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+  "aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground";
 const GIVE_BTN =
-  "mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-give px-5 text-base font-semibold " +
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-give px-5 text-base font-semibold " +
   "text-give-foreground transition-colors hover:bg-give/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const SMALL = "text-sm text-muted-foreground";
+const PLATFORM_NOTE =
+  "At checkout, Zeffy may suggest an optional contribution to Zeffy. It doesn't go to Sajjadia, and you can set it to $0.";
 ---
 
-<Wrapper
-  id={heading ? "support" : "ways-to-give"}
-  aria-labelledby={heading ? "support-title" : undefined}
-  class={heading ? "layout-full bg-muted py-16" : "scroll-mt-24"}
->
-  <div class={heading ? "layout-base" : ""}>
+<div id="ways-to-give" class="scroll-mt-24" data-giving>
+  <div class="max-w-2xl overflow-hidden rounded-2xl border border-border bg-card">
 
-    {heading && (
-      <div class="mb-8">
-        <h2 id="support-title" class="text-3xl text-foreground md:text-4xl">Support Sajjadia</h2>
-        <p class="mt-2 max-w-2xl text-lg text-muted-foreground">Choose where your gift goes.</p>
-      </div>
-    )}
+    <!-- Tabs -->
+    <div role="tablist" aria-label="Ways to give" class="grid grid-cols-3 gap-1.5 border-b border-border bg-muted p-1.5">
+      {TABS.map((tab, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`give-tab-${tab.key}`}
+          aria-controls={`give-panel-${tab.key}`}
+          aria-selected={i === 0 ? "true" : "false"}
+          tabindex={i === 0 ? 0 : -1}
+          data-tab={tab.key}
+          class={TAB}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
 
-    <div class="grid gap-5 md:grid-cols-3">
+    <!-- Panels: stacked in one grid cell so the card is always as tall as the tallest -->
+    <div class="grid p-6 md:p-7">
 
       <!-- ── Sajjadia Mosque ── -->
-      <article class={CARD}>
-        <span class={ICON_TILE}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 21h18"></path>
-            <path d="M5 21v-6a7 7 0 0 1 14 0v6"></path>
-            <path d="M12 8V4.5"></path>
-            <path d="M10.6 3.2a1.6 1.6 0 1 0 2.4 2"></path>
-            <path d="M9 21v-4a3 3 0 0 1 6 0v4"></path>
-          </svg>
-        </span>
-        <h3 class={TITLE}>Sajjadia Mosque</h3>
+      <section
+        role="tabpanel"
+        id="give-panel-mosque"
+        aria-labelledby="give-tab-mosque"
+        tabindex="0"
+        data-panel="mosque"
+        class={PANEL}
+      >
         <p class={BODY}>
           {giving?.mosqueDescription ?? "Help pay off our property at 2460 S Main St, Corona, and build our permanent Islamic Center."}
         </p>
-        <a
-          href="/sajjadia-mosque"
-          class="mt-3 self-start font-semibold text-secondary underline-offset-4 hover:underline"
-        >
+        <a href="/sajjadia-mosque" class="mt-2 self-start font-semibold text-secondary underline-offset-4 hover:underline">
           See the plans and progress
         </a>
 
@@ -93,6 +132,7 @@ const GIVE_BTN =
               aria-valuenow={pct}
               aria-valuemin="0"
               aria-valuemax="100"
+              aria-valuetext={`${usd(raised)} raised of ${usd(goal)}`}
             >
               <div class="h-full rounded-full bg-give" style={`width: ${pct}%`}></div>
             </div>
@@ -103,43 +143,87 @@ const GIVE_BTN =
           </div>
         )}
 
-        <div class="mt-auto pt-6">
-          <p class={RECEIPT}>Tax receipt from Sajjadia{ein ? ` (EIN ${ein})` : ""}</p>
-          <a href={mosqueUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
-            Give to the mosque
-            <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens in a new tab)</span>
-          </a>
+        <div class="mt-auto flex flex-col gap-4 pt-6" data-amount-group data-min="1" data-base-url={mosqueUrl}>
+          <div class="grid grid-cols-4 gap-2" role="group" aria-label="Suggested amounts">
+            {PRESETS.map((amount) => (
+              <button type="button" class={PRESET} aria-pressed="false" data-preset={amount}>${amount}</button>
+            ))}
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="give-amount-mosque" class={LABEL}>Donation amount ($)</label>
+            <input id="give-amount-mosque" type="text" inputmode="decimal" autocomplete="off" placeholder="Enter an amount" class={INPUT} data-amount />
+          </div>
+          {mosqueUrl ? (
+            <a href={mosqueUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN} data-donate-link>
+              Continue to donate
+              <ArrowUpRight size={18} aria-hidden="true" />
+              <span class="sr-only">(opens in a new tab)</span>
+            </a>
+          ) : (
+            <p class={SMALL}>Online giving for the mosque is temporarily unavailable.</p>
+          )}
+          <div class="flex flex-col gap-1 text-center">
+            <p class={SMALL}>Tax receipt from Sajjadia{ein ? ` (EIN ${ein})` : ""}</p>
+            <p class="text-xs text-muted-foreground">{PLATFORM_NOTE}</p>
+          </div>
         </div>
-      </article>
+      </section>
 
-      <!-- ── General donation ── -->
-      <article class={CARD}>
-        <span class={ICON_TILE}><HandHeart size={24} strokeWidth={1.75} aria-hidden="true" /></span>
-        <h3 class={TITLE}>{giving?.generalTitle ?? "General donation"}</h3>
+      <!-- ── General Donation ── -->
+      <section
+        role="tabpanel"
+        id="give-panel-general"
+        aria-labelledby="give-tab-general"
+        tabindex="0"
+        data-panel="general"
+        class={`${PANEL} invisible`}
+        inert
+      >
         <p class={BODY}>
           {giving?.generalDescription ??
             "Sadaqah and everyday support for weekly programs, Moharram and Ramadhan gatherings, and community services."}
         </p>
 
-        <div class="mt-auto pt-6">
-          <p class={RECEIPT}>Tax receipt from Sajjadia{ein ? ` (EIN ${ein})` : ""}</p>
-          <a href={generalUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN}>
-            Donate
-            <ArrowUpRight size={18} aria-hidden="true" />
-            <span class="sr-only">(opens in a new tab)</span>
-          </a>
+        <div class="mt-auto flex flex-col gap-4 pt-6" data-amount-group data-min="1" data-base-url={generalUrl}>
+          <div class="grid grid-cols-4 gap-2" role="group" aria-label="Suggested amounts">
+            {PRESETS.map((amount) => (
+              <button type="button" class={PRESET} aria-pressed="false" data-preset={amount}>${amount}</button>
+            ))}
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="give-amount-general" class={LABEL}>Donation amount ($)</label>
+            <input id="give-amount-general" type="text" inputmode="decimal" autocomplete="off" placeholder="Enter an amount" class={INPUT} data-amount />
+          </div>
+          {generalUrl ? (
+            <a href={generalUrl} target="_blank" rel="noopener noreferrer" class={GIVE_BTN} data-donate-link>
+              Continue to donate
+              <ArrowUpRight size={18} aria-hidden="true" />
+              <span class="sr-only">(opens in a new tab)</span>
+            </a>
+          ) : (
+            <p class={SMALL}>Online giving is temporarily unavailable.</p>
+          )}
+          <div class="flex flex-col gap-1 text-center">
+            <p class={SMALL}>Tax receipt from Sajjadia{ein ? ` (EIN ${ein})` : ""}</p>
+            <p class="text-xs text-muted-foreground">{PLATFORM_NOTE}</p>
+          </div>
         </div>
-      </article>
+      </section>
 
       <!-- ── Khums ── -->
-      <article class={CARD}>
-        <span class={ICON_TILE}><HandCoins size={24} strokeWidth={1.75} aria-hidden="true" /></span>
-        <h3 class={TITLE}>Khums</h3>
+      <section
+        role="tabpanel"
+        id="give-panel-khums"
+        aria-labelledby="give-tab-khums"
+        tabindex="0"
+        data-panel="khums"
+        class={`${PANEL} invisible`}
+        inert
+      >
         <p class={BODY}>
-          {giving?.khumsDescription ?? "Allocate your Khums to the Sajjadia Islamic Center through I.M.A.M., under our Ijaza."}
+          {giving?.khumsDescription ?? "Allocate your Khums to Sajjadia Islamic Society through I.M.A.M., under our Ijaza."}
         </p>
-        <p class="mt-3 text-sm text-muted-foreground">
+        <p class="mt-2 text-sm text-muted-foreground">
           Ijaza valid through {khums.validThrough}.
           {khums.ijazaUrl && (
             <a
@@ -149,23 +233,197 @@ const GIVE_BTN =
               class="ml-1 inline-flex items-center gap-1 font-semibold text-secondary underline-offset-4 hover:underline"
             >
               <FileText size={14} aria-hidden="true" />
-              View Ijaza
+              View Ijaza<span class="sr-only"> (opens in a new tab)</span>
             </a>
           )}
         </p>
 
-        <div class="mt-auto pt-6">
-          <p class={RECEIPT}>Official Khums receipt from I.M.A.M.</p>
-          <div class="mt-3">
-            <KhumsGuide {...khums} client:visible />
+        <!-- Sent straight to I.M.A.M.'s Khums form; their cart opens in a new tab -->
+        <form
+          method="post"
+          action={khums.formUrl}
+          enctype="multipart/form-data"
+          target="_blank"
+          rel="noopener noreferrer"
+          novalidate
+          class="mt-auto flex flex-col gap-4 pt-6"
+          data-khums-form
+          data-min={IMAM.minimum}
+        >
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="flex flex-col gap-1.5">
+              <label for="give-amount-khums" class={LABEL}>Khums amount ($)</label>
+              <input
+                id="give-amount-khums"
+                name="nyp"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder={`At least $${IMAM.minimum}`}
+                required
+                class={INPUT}
+                data-amount
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label for="give-khums-portion" class={LABEL}>Khums portion</label>
+              <select id="give-khums-portion" name="custom-options[khums-portion]" required class={INPUT}>
+                <option value="">Choose a portion</option>
+                {IMAM.portions.map((p) => <option value={p.value}>{p.label}</option>)}
+              </select>
+            </div>
           </div>
-        </div>
-      </article>
+
+          <!-- What I.M.A.M.'s form needs to allocate it to Sajjadia -->
+          <input type="hidden" name="update-price" value="" />
+          <input type="hidden" name="_nypnonce" value="" />
+          <input type="hidden" name="custom-options[do-you-wish-to-allocate-your-khums-to-an-islamic-center]" value="Yes" />
+          <input type="hidden" name="select-khums" value={khums.orgName} />
+          <input type="hidden" name="custom-options[khums-organizations]" value={khums.orgName} />
+          <input type="hidden" name="quantity" value="1" />
+          <input type="hidden" name="add-to-cart" value={IMAM.productId} />
+
+          <div class="flex items-center gap-3 rounded-lg border border-border bg-muted px-4 py-3">
+            <CircleCheck size={22} aria-hidden="true" className="shrink-0 text-primary" />
+            <p class="text-sm text-muted-foreground">
+              Allocated to <strong class="text-base text-foreground">{khums.orgName}</strong>
+            </p>
+          </div>
+
+          <p class="hidden text-sm font-semibold text-destructive" role="alert" data-error></p>
+
+          <button type="submit" class={GIVE_BTN}>
+            Continue to I.M.A.M.
+            <ArrowUpRight size={18} aria-hidden="true" />
+            <span class="sr-only">(opens in a new tab)</span>
+          </button>
+          <div class="flex flex-col gap-1 text-center">
+            <p class={SMALL}>Official Khums receipt from I.M.A.M.</p>
+            <p class="text-xs text-muted-foreground">On I.M.A.M.'s page, choose "Proceed to checkout" to review and pay.</p>
+          </div>
+        </form>
+      </section>
 
     </div>
-
-    <p class="mt-6 text-sm text-muted-foreground">
-      Sajjadia Islamic Society is a registered 501(c)(3) nonprofit{ein ? `, EIN ${ein}` : ""}. Donations to the Mosque and General funds are tax-deductible as allowed by law.
-    </p>
   </div>
-</Wrapper>
+
+  <p class="mt-6 max-w-2xl text-sm text-muted-foreground">
+    Sajjadia Islamic Society is a registered 501(c)(3) nonprofit{ein ? `, EIN ${ein}` : ""}. Donations to the Mosque and General funds are tax-deductible as allowed by law.
+  </p>
+</div>
+
+<script>
+  // "$1,250.50" -> 1250.5; anything unusable -> NaN
+  function parseAmount(raw: string): number {
+    const cleaned = raw.replace(/[$,\s]/g, "");
+    return /^\d+(\.\d{1,2})?$/.test(cleaned) ? Number(cleaned) : NaN;
+  }
+
+  // 50 -> "50", 25.5 -> "25.50"
+  function formatAmount(n: number): string {
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-giving]")) {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+
+    // ── Tabs ──
+    function selectTab(key: string, focus = false) {
+      for (const tab of tabs) {
+        const active = tab.dataset.tab === key;
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if (active && focus) tab.focus();
+      }
+      for (const panel of panels) {
+        const active = panel.dataset.panel === key;
+        // Hidden panels keep their space (equal heights) but can't be seen, read or tabbed into
+        panel.classList.toggle("invisible", !active);
+        panel.toggleAttribute("inert", !active);
+      }
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => {
+        selectTab(tab.dataset.tab!);
+        history.replaceState(null, "", `#${tab.dataset.tab}`);
+      });
+      tab.addEventListener("keydown", (e) => {
+        let next = -1;
+        if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
+        if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
+        if (e.key === "Home") next = 0;
+        if (e.key === "End") next = tabs.length - 1;
+        if (next < 0) return;
+        e.preventDefault();
+        selectTab(tabs[next]!.dataset.tab!, true);
+        history.replaceState(null, "", `#${tabs[next]!.dataset.tab}`);
+      });
+    });
+
+    // /donate#general or /donate#khums opens that tab
+    const fromHash = location.hash.slice(1);
+    if (tabs.some((t) => t.dataset.tab === fromHash)) selectTab(fromHash);
+
+    // ── Mosque and General: amount -> ?amount= on the donation link ──
+    for (const group of root.querySelectorAll<HTMLElement>("[data-amount-group]")) {
+      const input = group.querySelector<HTMLInputElement>("[data-amount]")!;
+      const link = group.querySelector<HTMLAnchorElement>("[data-donate-link]");
+      const presets = Array.from(group.querySelectorAll<HTMLButtonElement>("[data-preset]"));
+      const baseUrl = group.dataset.baseUrl;
+      const min = Number(group.dataset.min ?? 1);
+
+      function update() {
+        const amount = parseAmount(input.value);
+        for (const button of presets) {
+          button.setAttribute("aria-pressed", String(Number(button.dataset.preset) === amount));
+        }
+        if (!link || !baseUrl) return;
+        const url = new URL(baseUrl);
+        if (amount >= min) url.searchParams.set("amount", formatAmount(amount));
+        link.href = url.toString();
+      }
+
+      for (const button of presets) {
+        button.addEventListener("click", () => {
+          input.value = button.dataset.preset!;
+          update();
+        });
+      }
+      input.addEventListener("input", update);
+    }
+
+    // ── Khums: check the amount and portion before sending to I.M.A.M. ──
+    const khumsForm = root.querySelector<HTMLFormElement>("[data-khums-form]");
+    if (khumsForm) {
+      const amountInput = khumsForm.querySelector<HTMLInputElement>('[name="nyp"]')!;
+      const portion = khumsForm.querySelector<HTMLSelectElement>('[name="custom-options[khums-portion]"]')!;
+      const errorEl = khumsForm.querySelector<HTMLElement>("[data-error]")!;
+      const min = Number(khumsForm.dataset.min ?? 5);
+
+      const showError = (message: string, field: HTMLElement) => {
+        errorEl.textContent = message;
+        errorEl.classList.remove("hidden");
+        field.focus();
+      };
+
+      khumsForm.addEventListener("submit", (e) => {
+        errorEl.classList.add("hidden");
+        const amount = parseAmount(amountInput.value);
+        if (!(amount >= min)) {
+          e.preventDefault();
+          showError(`Please enter an amount of at least $${min}.`, amountInput);
+          return;
+        }
+        if (!portion.value) {
+          e.preventDefault();
+          showError("Please choose a Khums portion.", portion);
+          return;
+        }
+        // Send a plain number, the way I.M.A.M.'s form expects it
+        amountInput.value = formatAmount(amount);
+      });
+    }
+  }
+</script>
