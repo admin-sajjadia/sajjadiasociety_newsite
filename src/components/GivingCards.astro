@@ -84,7 +84,7 @@ const PLATFORM_NOTE =
 ---
 
 <div id="ways-to-give" class="scroll-mt-24" data-giving>
-  <div class="max-w-2xl overflow-hidden rounded-2xl border border-border bg-card">
+  <div class="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-border bg-card">
 
     <!-- Tabs -->
     <div role="tablist" aria-label="Ways to give" class="grid grid-cols-3 gap-1.5 border-b border-border bg-muted p-1.5">
@@ -221,10 +221,10 @@ const PLATFORM_NOTE =
         inert
       >
         <p class={BODY}>
-          {giving?.khumsDescription ?? "Allocate your Khums to Sajjadia Islamic Society through I.M.A.M., under our Ijaza."}
+          {giving?.khumsDescription}
         </p>
         <p class="mt-2 text-sm text-muted-foreground">
-          Ijaza valid through {khums.validThrough}.
+          Khums Ijaza valid through {khums.validThrough}.
           {khums.ijazaUrl && (
             <a
               href={khums.ijazaUrl}
@@ -233,7 +233,7 @@ const PLATFORM_NOTE =
               class="ml-1 inline-flex items-center gap-1 font-semibold text-secondary underline-offset-4 hover:underline"
             >
               <FileText size={14} aria-hidden="true" />
-              View Ijaza<span class="sr-only"> (opens in a new tab)</span>
+              View Khums Ijaza<ArrowUpRight size={14} aria-hidden="true" /><span class="sr-only"> (opens in a new tab)</span>
             </a>
           )}
         </p>
@@ -298,7 +298,7 @@ const PLATFORM_NOTE =
             <span class="sr-only">(opens in a new tab)</span>
           </button>
           <div class="flex flex-col gap-1 text-center">
-            <p class={SMALL}>Official Khums receipt from I.M.A.M.</p>
+            <p class={SMALL}>Official Khums receipt will be sent from I.M.A.M.</p>
             <p class="text-xs text-muted-foreground">On I.M.A.M.'s page, choose "Proceed to checkout" to review and pay.</p>
           </div>
         </form>
@@ -307,7 +307,7 @@ const PLATFORM_NOTE =
     </div>
   </div>
 
-  <p class="mt-6 max-w-2xl text-sm text-muted-foreground">
+  <p class="mx-auto text-center mt-6 max-w-2xl text-sm text-muted-foreground">
     Sajjadia Islamic Society is a registered 501(c)(3) nonprofit{ein ? `, EIN ${ein}` : ""}. Donations to the Mosque and General funds are tax-deductible as allowed by law.
   </p>
 </div>
