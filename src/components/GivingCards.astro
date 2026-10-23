@@ -259,7 +259,7 @@ const PLATFORM_NOTE =
                 type="text"
                 inputmode="decimal"
                 autocomplete="off"
-                placeholder={`At least $${IMAM.minimum}`}
+                placeholder={`Minimum Amount: $${IMAM.minimum}`}
                 required
                 class={INPUT}
                 data-amount
@@ -413,7 +413,7 @@ const PLATFORM_NOTE =
         const amount = parseAmount(amountInput.value);
         if (!(amount >= min)) {
           e.preventDefault();
-          showError(`Please enter an amount of at least $${min}.`, amountInput);
+          showError(`Please enter a minimum amount of $${min}.`, amountInput);
           return;
         }
         if (!portion.value) {

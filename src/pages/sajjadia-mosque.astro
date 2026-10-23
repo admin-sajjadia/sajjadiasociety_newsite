@@ -14,7 +14,7 @@ const [campaign, albums] = await Promise.all([
   getAlbums(["renderings", "property", "construction"]) as Promise<Album[]>,
 ]);
 
-const title = campaign?.title ?? "Sajjadia Mosque";
+const title = campaign?.title;
 const tagline = campaign?.tagline;
 const raised = campaign?.raisedAmount ?? 0;
 const goal = campaign?.goalAmount ?? 0;
