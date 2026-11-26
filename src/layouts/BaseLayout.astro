@@ -106,6 +106,9 @@ const ogImage = ogImageProp ?? new URL("/og-image.jpg", Astro.site).toString();
     <Footer />
     <Analytics />
     <SpeedInsights/>
+
+    {import.meta.env.PUBLIC_FIRSTALK_URL && <script is:inline src={`${import.meta.env.PUBLIC_FIRSTALK_URL}/widget.js`} data-client="sajjadia" async></script>}
+
     <!-- Service worker: offline fallback for the installed app (live site only) -->
     <script>
       if (import.meta.env.PROD && "serviceWorker" in navigator) {
