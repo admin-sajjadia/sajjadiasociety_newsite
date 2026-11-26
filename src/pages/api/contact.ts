@@ -91,6 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ── Save to Sanity ──
     await sanityClient.create({
+      _id: `private.${crypto.randomUUID()}`,
       _type: 'contactSubmission',
       name,
       email,

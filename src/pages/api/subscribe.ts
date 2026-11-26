@@ -102,6 +102,7 @@ export const POST: APIRoute = async ({ request }) => {
     const existing = await sanityClient.fetch<number>(
       'count(*[_type == "subscriber" && phone == $phone])',
       { phone },
+      { perspective: 'raw' },
     )
     if (existing > 0) {
       return json({ success: true }, 200)
@@ -109,6 +110,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // ── Save to Sanity ──
     await sanityClient.create({
+      _id: `private.${crypto.randomUUID()}`,
       _type: 'subscriber',
       fullName,
       phone,
